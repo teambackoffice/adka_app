@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../modal/job_model.dart';
-import '../../modal/material_request_model.dart';
+import '../../../modal/job_model.dart';
+import '../../../modal/material_request_model.dart';
 import 'create_material_request_page.dart';
 
 class WorkDetailPage extends StatefulWidget {

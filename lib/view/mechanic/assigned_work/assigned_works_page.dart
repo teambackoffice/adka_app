@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../modal/job_model.dart';
-import '../../modal/material_request_model.dart';
+import '../../../modal/job_model.dart';
+import '../../../modal/material_request_model.dart';
 import 'work_detail_page.dart';
 
 class AssignedWorksPage extends StatefulWidget {
@@ -228,10 +228,7 @@ class _AssignedWorksPageState extends State<AssignedWorksPage> {
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final job = _jobs[index];
-                  return _JobCard(
-                    job: job,
-                    onTap: () => _openDetail(index),
-                  );
+                  return _JobCard(job: job, onTap: () => _openDetail(index));
                 },
               ),
             ),
@@ -301,10 +298,7 @@ class _JobCard extends StatelessWidget {
   final Job job;
   final VoidCallback onTap;
 
-  const _JobCard({
-    required this.job,
-    required this.onTap,
-  });
+  const _JobCard({required this.job, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

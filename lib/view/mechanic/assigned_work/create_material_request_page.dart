@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../modal/material_request_model.dart';
+import '../../../modal/material_request_model.dart';
 
 class CreateMaterialRequestPage extends StatefulWidget {
   final String jobTitle;
@@ -299,10 +299,8 @@ class _CreateMaterialRequestPageState extends State<CreateMaterialRequestPage> {
                     ),
                     items: _requestTypes
                         .map(
-                          (type) => DropdownMenuItem(
-                            value: type,
-                            child: Text(type),
-                          ),
+                          (type) =>
+                              DropdownMenuItem(value: type, child: Text(type)),
                         )
                         .toList(),
                     onChanged: (val) {
@@ -336,10 +334,7 @@ class _CreateMaterialRequestPageState extends State<CreateMaterialRequestPage> {
                     controller: _companyController,
                     decoration: InputDecoration(
                       hintText: 'Enter company name',
-                      prefixIcon: const Icon(
-                        Icons.business_rounded,
-                        size: 20,
-                      ),
+                      prefixIcon: const Icon(Icons.business_rounded, size: 20),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -381,10 +376,7 @@ class _CreateMaterialRequestPageState extends State<CreateMaterialRequestPage> {
                     controller: _warehouseController,
                     decoration: InputDecoration(
                       hintText: 'e.g. Stores - ASMCSL',
-                      prefixIcon: const Icon(
-                        Icons.warehouse_rounded,
-                        size: 20,
-                      ),
+                      prefixIcon: const Icon(Icons.warehouse_rounded, size: 20),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14,

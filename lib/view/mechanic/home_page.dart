@@ -2,8 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'assigned_works_page.dart';
+import 'assigned_work/assigned_works_page.dart';
 import 'profile_page.dart';
+import 'qc/qc_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,7 +16,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [AssignedWorksPage(), ProfilePage()];
+  final List<Widget> _pages = const [
+    AssignedWorksPage(),
+    QcPage(),
+    ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +45,11 @@ class _HomePageState extends State<HomePage> {
               icon: Icons.assignment_outlined,
               selectedIcon: Icons.assignment_rounded,
               label: 'Works',
+            ),
+            _NavItem(
+              icon: Icons.fact_check_outlined,
+              selectedIcon: Icons.fact_check_rounded,
+              label: 'QC',
             ),
             _NavItem(
               icon: Icons.person_outline_rounded,
