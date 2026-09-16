@@ -1,7 +1,134 @@
 import 'package:flutter/material.dart';
+import '../../modal/job_model.dart';
+import '../../modal/material_request_model.dart';
+import 'work_detail_page.dart';
 
-class AssignedWorksPage extends StatelessWidget {
+class AssignedWorksPage extends StatefulWidget {
   const AssignedWorksPage({super.key});
+
+  @override
+  State<AssignedWorksPage> createState() => _AssignedWorksPageState();
+}
+
+class _AssignedWorksPageState extends State<AssignedWorksPage> {
+  late List<Job> _jobs;
+
+  @override
+  void initState() {
+    super.initState();
+    _jobs = [
+      Job(
+        id: 'JOB-001',
+        vehicleName: 'Toyota Camry',
+        vehicleNumber: 'KL-07-AX-3456',
+        serviceType: 'Engine Oil Change & Filter',
+        description:
+            'Full synthetic oil change with OEM filter replacement. Check brake pads.',
+        customerName: 'Rahul Menon',
+        customerPhone: '+91 98470 12345',
+        status: 'In Progress',
+        dueDate: 'Today',
+        materialRequests: [
+          MaterialRequest(
+            id: 'MR-001',
+            materialRequestType: 'Purchase',
+            company: 'Al Sahel Medical College Supplies LLC',
+            setWarehouse: 'Stores - ASMCSL',
+            items: [
+              MaterialRequestItem(
+                itemCode: 'ECG Machine',
+                qty: 5,
+                rate: 50000,
+                warehouse: 'Stores - ASMCSL',
+              ),
+            ],
+          ),
+        ],
+      ),
+      Job(
+        id: 'JOB-002',
+        vehicleName: 'Hyundai Creta',
+        vehicleNumber: 'KL-08-BN-1122',
+        serviceType: 'AC Service & Recharge',
+        description:
+            'Compressor noise reported. Check gas levels and condenser.',
+        customerName: 'Anitha Nair',
+        customerPhone: '+91 98471 23456',
+        status: 'Pending',
+        dueDate: 'Sep 16',
+      ),
+      Job(
+        id: 'JOB-003',
+        vehicleName: 'Maruti Suzuki Swift',
+        vehicleNumber: 'KL-10-CD-7890',
+        serviceType: 'Brake Pad Replacement',
+        description:
+            'Front and rear brake pad replacement. Inspect discs for wear.',
+        customerName: 'Faiz Ahmed',
+        customerPhone: '+91 98472 34567',
+        status: 'Pending',
+        dueDate: 'Sep 16',
+      ),
+      Job(
+        id: 'JOB-004',
+        vehicleName: 'Honda City',
+        vehicleNumber: 'KL-11-EF-4321',
+        serviceType: 'General Service',
+        description:
+            '10K km periodic service. All fluids, filters, and inspection.',
+        customerName: 'Priya Sharma',
+        customerPhone: '+91 98473 45678',
+        status: 'In Progress',
+        dueDate: 'Today',
+      ),
+      Job(
+        id: 'JOB-005',
+        vehicleName: 'Kia Seltos',
+        vehicleNumber: 'KL-09-GH-6543',
+        serviceType: 'Tyre Rotation & Alignment',
+        description: 'Wheel alignment and balancing. Rotate all four tyres.',
+        customerName: 'Vijay Kumar',
+        customerPhone: '+91 98474 56789',
+        status: 'Pending',
+        dueDate: 'Sep 17',
+      ),
+      Job(
+        id: 'JOB-006',
+        vehicleName: 'Tata Nexon',
+        vehicleNumber: 'KL-12-JK-9876',
+        serviceType: 'Battery Replacement',
+        description: 'Replace OEM battery. Test alternator output.',
+        customerName: 'Deepa Raj',
+        customerPhone: '+91 98475 67890',
+        status: 'Completed',
+        dueDate: 'Sep 14',
+      ),
+    ];
+  }
+
+  int get _pendingCount =>
+      _jobs.where((j) => j.status.toLowerCase() == 'pending').length;
+
+  int get _inProgressCount =>
+      _jobs.where((j) => j.status.toLowerCase() == 'in progress').length;
+
+  int get _completedCount =>
+      _jobs.where((j) => j.status.toLowerCase() == 'completed').length;
+
+  Future<void> _openDetail(int index) async {
+    final updatedJob = await Navigator.push<Job>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WorkDetailPage(job: _jobs[index]),
+      ),
+    );
+
+    if (updatedJob != null && mounted) {
+      setState(() {
+        _jobs[index] = updatedJob;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +176,7 @@ class AssignedWorksPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Your current service assignments',
+                                'Tap any job to view details or create requests',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: scheme.onSurfaceVariant,
                                 ),
@@ -67,21 +194,21 @@ class AssignedWorksPage extends StatelessWidget {
                         _SummaryChip(
                           icon: Icons.pending_actions_rounded,
                           label: 'Pending',
-                          count: '3',
+                          count: '$_pendingCount',
                           color: const Color(0xFFF59E0B),
                         ),
                         const SizedBox(width: 10),
                         _SummaryChip(
                           icon: Icons.autorenew_rounded,
                           label: 'In Progress',
-                          count: '2',
+                          count: '$_inProgressCount',
                           color: scheme.primary,
                         ),
                         const SizedBox(width: 10),
                         _SummaryChip(
                           icon: Icons.check_circle_outline_rounded,
                           label: 'Done',
-                          count: '8',
+                          count: '$_completedCount',
                           color: const Color(0xFF10B981),
                         ),
                       ],
@@ -96,11 +223,15 @@ class AssignedWorksPage extends StatelessWidget {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
               sliver: SliverList.separated(
-                itemCount: _demoJobs.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemCount: _jobs.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  final job = _demoJobs[index];
-                  return _JobCard(job: job);
+                  final job = _jobs[index];
+                  return _JobCard(
+                    job: job,
+                    onTap: () => _openDetail(index),
+                  );
                 },
               ),
             ),
@@ -167,9 +298,13 @@ class _SummaryChip extends StatelessWidget {
 // ─── Job card ──────────────────────────────────────────────────────────────────
 
 class _JobCard extends StatelessWidget {
-  final _Job job;
+  final Job job;
+  final VoidCallback onTap;
 
-  const _JobCard({required this.job});
+  const _JobCard({
+    required this.job,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -177,110 +312,170 @@ class _JobCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final statusColor = _statusColor(job.status);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.50)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.50),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: vehicle + status
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.directions_car_rounded,
-                  color: scheme.primary,
-                  size: 20,
+              // Top row: vehicle + status
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.directions_car_rounded,
+                      color: scheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          job.vehicleName,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          job.vehicleNumber,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _StatusBadge(status: job.status, color: statusColor),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+
+              // Service description
+              Text(
+                job.serviceType,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      job.vehicleName,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      job.vehicleNumber,
-                      style: theme.textTheme.bodySmall?.copyWith(
+              if (job.description.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  job.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 12),
+
+              // Bottom row: customer info & material requests count tag
+              Row(
+                children: [
+                  Icon(
+                    Icons.person_outline_rounded,
+                    size: 14,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      job.customerName,
+                      style: TextStyle(
+                        fontSize: 12,
                         color: scheme.onSurfaceVariant,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  if (job.materialRequests.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.inventory_2_rounded,
+                            size: 12,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${job.materialRequests.length} MR',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                   ],
-                ),
-              ),
-              _StatusBadge(status: job.status, color: statusColor),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          // Service description
-          Text(
-            job.serviceType,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-            ),
-          ),
-          if (job.description.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              job.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 14),
-
-          // Bottom info row
-          Row(
-            children: [
-              Icon(Icons.person_outline_rounded, size: 15, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  job.customerName,
-                  style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-                ),
-              ),
-              Icon(Icons.schedule_rounded, size: 15, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 4),
-              Text(
-                job.dueDate,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 14,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    job.dueDate,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -327,82 +522,3 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 }
-
-// ─── Demo data model & list ────────────────────────────────────────────────────
-
-class _Job {
-  final String vehicleName;
-  final String vehicleNumber;
-  final String serviceType;
-  final String description;
-  final String customerName;
-  final String status;
-  final String dueDate;
-
-  const _Job({
-    required this.vehicleName,
-    required this.vehicleNumber,
-    required this.serviceType,
-    required this.description,
-    required this.customerName,
-    required this.status,
-    required this.dueDate,
-  });
-}
-
-const _demoJobs = <_Job>[
-  _Job(
-    vehicleName: 'Toyota Camry',
-    vehicleNumber: 'KL-07-AX-3456',
-    serviceType: 'Engine Oil Change & Filter',
-    description: 'Full synthetic oil change with OEM filter replacement. Check brake pads.',
-    customerName: 'Rahul Menon',
-    status: 'In Progress',
-    dueDate: 'Today',
-  ),
-  _Job(
-    vehicleName: 'Hyundai Creta',
-    vehicleNumber: 'KL-08-BN-1122',
-    serviceType: 'AC Service & Recharge',
-    description: 'Compressor noise reported. Check gas levels and condenser.',
-    customerName: 'Anitha Nair',
-    status: 'Pending',
-    dueDate: 'Sep 16',
-  ),
-  _Job(
-    vehicleName: 'Maruti Suzuki Swift',
-    vehicleNumber: 'KL-10-CD-7890',
-    serviceType: 'Brake Pad Replacement',
-    description: 'Front and rear brake pad replacement. Inspect discs for wear.',
-    customerName: 'Faiz Ahmed',
-    status: 'Pending',
-    dueDate: 'Sep 16',
-  ),
-  _Job(
-    vehicleName: 'Honda City',
-    vehicleNumber: 'KL-11-EF-4321',
-    serviceType: 'General Service',
-    description: '10K km periodic service. All fluids, filters, and inspection.',
-    customerName: 'Priya Sharma',
-    status: 'In Progress',
-    dueDate: 'Today',
-  ),
-  _Job(
-    vehicleName: 'Kia Seltos',
-    vehicleNumber: 'KL-09-GH-6543',
-    serviceType: 'Tyre Rotation & Alignment',
-    description: 'Wheel alignment and balancing. Rotate all four tyres.',
-    customerName: 'Vijay Kumar',
-    status: 'Pending',
-    dueDate: 'Sep 17',
-  ),
-  _Job(
-    vehicleName: 'Tata Nexon',
-    vehicleNumber: 'KL-12-JK-9876',
-    serviceType: 'Battery Replacement',
-    description: 'Replace OEM battery. Test alternator output.',
-    customerName: 'Deepa Raj',
-    status: 'Completed',
-    dueDate: 'Sep 14',
-  ),
-];
