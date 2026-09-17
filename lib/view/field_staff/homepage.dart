@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:adka_app/view/field_staff/breakdown.dart';
+import 'package:adka_app/view/field_staff/breakdown/breakdown.dart';
 import 'package:adka_app/view/field_staff/maintenence.dart';
 import 'package:adka_app/view/field_staff/profile.dart';
 import 'package:flutter/material.dart';
