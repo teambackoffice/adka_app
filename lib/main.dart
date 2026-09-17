@@ -1,3 +1,4 @@
+import 'package:adka_app/view/field_staff/homepage.dart';
 import 'package:adka_app/view/login_page.dart';
 import 'package:adka_app/view/mechanic/home_page.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0469B1)),
       ),
-      home: const HomePage(),
+      home: FieldStaffHomePage(),
     );
   }
 }

@@ -117,9 +117,9 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signed in as ${_emailController.text.trim()}')),
       );
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MechanicHomePage()),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(

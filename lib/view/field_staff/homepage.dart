@@ -1,25 +1,24 @@
 import 'dart:ui';
 
+import 'package:adka_app/view/field_staff/breakdown.dart';
+import 'package:adka_app/view/field_staff/maintenence.dart';
+import 'package:adka_app/view/field_staff/profile.dart';
 import 'package:flutter/material.dart';
 
-import 'assigned_work/assigned_works_page.dart';
-import 'profile_page.dart';
-import 'qc/qc_page.dart';
-
-class MechanicHomePage extends StatefulWidget {
-  const MechanicHomePage({super.key});
+class FieldStaffHomePage extends StatefulWidget {
+  const FieldStaffHomePage({super.key});
 
   @override
-  State<MechanicHomePage> createState() => _MechanicHomePageState();
+  State<FieldStaffHomePage> createState() => _FieldStaffHomePageState();
 }
 
-class _MechanicHomePageState extends State<MechanicHomePage> {
+class _FieldStaffHomePageState extends State<FieldStaffHomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
-    AssignedWorksPage(),
-    QcPage(),
-    ProfilePage(),
+    FieldStaffBreakdownPage(),
+    FieldStaffMaintenencePage(),
+    FieldStaffProfilePage(),
   ];
 
   @override
@@ -29,8 +28,8 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
       body: _pages[_currentIndex],
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
+          left: 16,
+          right: 16,
           bottom: MediaQuery.of(context).padding.bottom + 1,
         ),
         child: _FloatingNavBar(
@@ -42,14 +41,14 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
           },
           items: const [
             _NavItem(
-              icon: Icons.assignment_outlined,
-              selectedIcon: Icons.assignment_rounded,
-              label: 'Works',
+              icon: Icons.report_problem_outlined,
+              selectedIcon: Icons.report_problem_rounded,
+              label: 'Breakdown',
             ),
             _NavItem(
-              icon: Icons.fact_check_outlined,
-              selectedIcon: Icons.fact_check_rounded,
-              label: 'QC',
+              icon: Icons.build_outlined,
+              selectedIcon: Icons.build_rounded,
+              label: 'Maintenance',
             ),
             _NavItem(
               icon: Icons.person_outline_rounded,
@@ -96,7 +95,7 @@ class _FloatingNavBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          height: 68,
+          height: 70,
           decoration: BoxDecoration(
             color: scheme.surface.withValues(alpha: isDark ? 0.65 : 0.85),
             borderRadius: BorderRadius.circular(28),
@@ -122,10 +121,10 @@ class _FloatingNavBar extends StatelessWidget {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 350),
                     curve: Curves.easeOutCubic,
-                    left: itemWidth * currentIndex + 8,
+                    left: itemWidth * currentIndex + 6,
                     top: 8,
-                    width: itemWidth - 16,
-                    height: 68 - 16,
+                    width: itemWidth - 12,
+                    height: 54,
                     child: Container(
                       decoration: BoxDecoration(
                         color: scheme.primary.withValues(alpha: 0.14),
