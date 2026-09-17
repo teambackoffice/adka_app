@@ -1,6 +1,8 @@
 // ---------- ADD BREAKDOWN VEHICLE PAGE ----------
+import 'dart:io';
 import 'package:adka_app/view/field_staff/breakdown/breakdown.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddBreakdownVehiclePage extends StatefulWidget {
   const AddBreakdownVehiclePage({super.key});
@@ -11,70 +13,147 @@ class AddBreakdownVehiclePage extends StatefulWidget {
 }
 
 class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
-  final _formKey = GlobalKey<FormState>();
-  final _vehicleNumberController = TextEditingController();
-  final _driverNameController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _issueController = TextEditingController();
+  static const Color _primaryColor = Color(0xFF0469B1);
 
+  final _formKey = GlobalKey<FormState>();
+  final _descriptionController = TextEditingController();
+
+  // Replace with your actual asset list (from API / provider / etc.)
+  final List<String> _assets = ['Vehicle', 'Machine'];
+
+  String? _selectedAsset;
+  Priority _priority = Priority.medium;
+  File? _attachedImage;
   bool _isSubmitting = false;
 
   @override
   void dispose() {
-    _vehicleNumberController.dispose();
-    _driverNameController.dispose();
-    _locationController.dispose();
-    _issueController.dispose();
+    _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(
+                Icons.camera_alt_rounded,
+                color: _primaryColor,
+              ),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.photo_library_rounded,
+                color: _primaryColor,
+              ),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: source, imageQuality: 80);
+      if (picked != null) {
+        setState(() => _attachedImage = File(picked.path));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            source == ImageSource.camera
+                ? 'Camera not available on this device/emulator.'
+                : 'Could not open gallery: $e',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedAsset == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a vehicle/machine')),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
     final vehicle = BreakdownVehicle(
-      vehicleNumber: _vehicleNumberController.text.trim(),
-      driverName: _driverNameController.text.trim(),
-      location: _locationController.text.trim(),
-      issue: _issueController.text.trim(),
+      vehicleNumber: _selectedAsset!,
+      issue: _descriptionController.text.trim(),
+      priority: _priority,
+      image: _attachedImage,
       reportedAt: DateTime.now(),
     );
 
-    await Future.delayed(const Duration(milliseconds: 200)); // small UX pause
+    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
     Navigator.pop(context, vehicle);
   }
 
-  InputDecoration _decoration({
-    required String label,
-    required IconData icon,
-    String? hint,
-  }) {
+  Widget _sectionLabel(String text, {bool required = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            color: Colors.black87,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+          children: [
+            TextSpan(text: text),
+            if (required)
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _boxDecoration({String? hint}) {
     return InputDecoration(
-      labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, color: Color(0xFF0469B1)),
       filled: true,
-      fillColor: Colors.grey.shade50,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade400),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade400),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF0469B1), width: 1.5),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _primaryColor, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
     );
   }
 
@@ -83,170 +162,179 @@ class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           'Report Breakdown',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
-        centerTitle: true,
-        backgroundColor: Color(0xFF0469B1),
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0.5,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header banner
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF0469B1),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Color(0xFF0469B1)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF0469B1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.local_shipping,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Fill in the vehicle and issue details to log a new breakdown.',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Colors.white,
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Vehicle / Machine dropdown
+              _sectionLabel('Vehicle/Machine', required: true),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedAsset,
+                decoration: _boxDecoration(hint: 'Select Asset'),
+                icon: const Icon(Icons.arrow_drop_down),
+                items: _assets
+                    .map(
+                      (asset) =>
+                          DropdownMenuItem(value: asset, child: Text(asset)),
+                    )
+                    .toList(),
+                onChanged: (value) => setState(() => _selectedAsset = value),
+                validator: (value) =>
+                    value == null ? 'Select a vehicle/machine' : null,
+              ),
+              const SizedBox(height: 20),
 
-                // Card with form fields
-                Container(
-                  padding: const EdgeInsets.all(16),
+              // Description
+              _sectionLabel('Description', required: true),
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 5,
+                decoration: _boxDecoration(hint: 'Describe the issue...'),
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Describe the issue'
+                    : null,
+              ),
+              const SizedBox(height: 20),
+
+              // Attach photo
+              Row(
+                children: [
+                  const Icon(Icons.camera_alt_outlined, size: 18),
+                  const SizedBox(width: 6),
+                  _sectionLabel('Attach Photo'),
+                ],
+              ),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: double.infinity,
+                  height: _attachedImage != null ? 160 : 60,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade400),
                   ),
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _vehicleNumberController,
-                        textCapitalization: TextCapitalization.characters,
-                        decoration: _decoration(
-                          label: 'Vehicle Number',
-                          icon: Icons.directions_car_filled_outlined,
-                          hint: '',
+                  child: _attachedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(_attachedImage!, fit: BoxFit.cover),
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _attachedImage = null),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo_outlined,
+                                size: 18,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Tap to take a photo or choose one',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
                         ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                            ? 'Enter vehicle number'
-                            : null,
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _driverNameController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: _decoration(
-                          label: 'Driver Name',
-                          icon: Icons.person_outline,
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                            ? 'Enter driver name'
-                            : null,
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _locationController,
-                        decoration: _decoration(
-                          label: 'Location',
-                          icon: Icons.location_on_outlined,
-                          hint: '',
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                            ? 'Enter location'
-                            : null,
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _issueController,
-                        maxLines: 4,
-                        decoration: _decoration(
-                          label: 'Issue Description',
-                          icon: Icons.build_outlined,
-                          hint: 'Describe what went wrong',
-                        ).copyWith(alignLabelWithHint: true),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                            ? 'Describe the issue'
-                            : null,
-                      ),
-                    ],
-                  ),
                 ),
+              ),
+              const SizedBox(height: 20),
 
-                const SizedBox(height: 24),
+              // Priority
+              _sectionLabel('Priority'),
+              Row(
+                children: Priority.values.map((p) {
+                  return Expanded(
+                    child: RadioListTile<Priority>(
+                      value: p,
+                      groupValue: _priority,
+                      onChanged: (value) => setState(() => _priority = value!),
+                      title: Text(
+                        p.label,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      activeColor: _primaryColor,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 28),
 
-                // Save button
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: _isSubmitting ? null : _submit,
-                    icon: _isSubmitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                            ),
-                          )
-                        : const Icon(Icons.save_outlined),
-                    label: Text(
-                      _isSubmitting ? 'Saving...' : 'Save Breakdown',
-                      style: const TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w600,
-                      ),
+              // Submit
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF0469B1),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 1,
-                    ),
+                    elevation: 1,
                   ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'SUBMIT',
+                          style: TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                 ),
-                const SizedBox(height: 12),
-              ],
-            ),
+              ),
+              const SizedBox(height: 12),
+            ],
           ),
         ),
       ),

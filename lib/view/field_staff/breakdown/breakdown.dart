@@ -1,20 +1,39 @@
+import 'dart:io';
 import 'package:adka_app/view/field_staff/breakdown/create_breakdown.dart';
 import 'package:flutter/material.dart';
 
+// ---------- PRIORITY ----------
+enum Priority { low, medium, high }
+
+extension PriorityX on Priority {
+  String get label => name[0].toUpperCase() + name.substring(1);
+
+  Color get color {
+    switch (this) {
+      case Priority.low:
+        return const Color(0xFF2E9E5B);
+      case Priority.medium:
+        return const Color(0xFF0469B1);
+      case Priority.high:
+        return const Color(0xFFE53935);
+    }
+  }
+}
+
 // ---------- MODEL ----------
 class BreakdownVehicle {
-  final String vehicleNumber;
-  final String driverName;
-  final String location;
-  final String issue;
+  final String vehicleNumber; // selected asset (vehicle/machine)
+  final String issue; // description
+  final Priority priority;
+  final File? image; // optional attached photo
   final DateTime reportedAt;
 
   BreakdownVehicle({
     required this.vehicleNumber,
-    required this.driverName,
-    required this.location,
     required this.issue,
     required this.reportedAt,
+    this.priority = Priority.medium,
+    this.image,
   });
 }
 
@@ -192,16 +211,6 @@ class _FieldStaffBreakdownPageState extends State<FieldStaffBreakdownPage> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'All vehicles are running smoothly. Tap the button\nbelow to log a new breakdown.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.black45,
-                height: 1.4,
-              ),
-            ),
           ],
         ),
       ),
@@ -225,6 +234,8 @@ class _BreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final priorityColor = vehicle.priority.color;
+
     return Dismissible(
       key: ValueKey('${vehicle.vehicleNumber}-${vehicle.reportedAt}'),
       direction: DismissDirection.endToStart,
@@ -284,13 +295,26 @@ class _BreakdownCard extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             color: Colors.black87,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          vehicle.driverName,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: Colors.black54,
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: priorityColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${vehicle.priority.label} priority',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: priorityColor,
+                            ),
                           ),
                         ),
                       ],
@@ -319,28 +343,6 @@ class _BreakdownCard extends StatelessWidget {
               const SizedBox(height: 12),
               Divider(height: 1, color: Colors.grey[200]),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 15,
-                    color: Colors.grey[500],
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      vehicle.location,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -352,6 +354,7 @@ class _BreakdownCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.report_problem_rounded, size: 15, color: accent),
                     const SizedBox(width: 8),
@@ -363,13 +366,25 @@ class _BreakdownCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           color: accent.withOpacity(0.9),
                         ),
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (vehicle.image != null) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.file(
+                    vehicle.image!,
+                    height: 130,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
