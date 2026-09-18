@@ -19,7 +19,7 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
   final List<Widget> _pages = const [
     AssignedWorksPage(),
     QcPage(),
-    ProfilePage(),
+    CommonProfilePage(),
   ];
 
   @override

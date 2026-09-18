@@ -1,8 +1,8 @@
 import 'dart:ui';
 
 import 'package:adka_app/view/field_staff/breakdown/breakdown.dart';
-import 'package:adka_app/view/field_staff/maintenence.dart';
-import 'package:adka_app/view/field_staff/profile.dart';
+import 'package:adka_app/view/field_staff/maintenence/maintenence.dart';
+import 'package:adka_app/view/mechanic/profile_page.dart';
 import 'package:flutter/material.dart';
 
 class FieldStaffHomePage extends StatefulWidget {
@@ -18,7 +18,7 @@ class _FieldStaffHomePageState extends State<FieldStaffHomePage> {
   final List<Widget> _pages = const [
     FieldStaffBreakdownPage(),
     FieldStaffMaintenencePage(),
-    FieldStaffProfilePage(),
+    CommonProfilePage(),
   ];
 
   @override
@@ -196,7 +196,7 @@ class _NavItemButton extends StatelessWidget {
                       child: Icon(
                         selected ? item.selectedIcon : item.icon,
                         color: color,
-                        size: 22,
+                        size: 16,
                       ),
                     );
                   },

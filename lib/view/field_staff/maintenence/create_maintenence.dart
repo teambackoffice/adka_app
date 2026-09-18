@@ -1,18 +1,19 @@
-// ---------- ADD BREAKDOWN VEHICLE PAGE ----------
+// ---------- ADD MAINTENANCE TASK PAGE ----------
 import 'dart:io';
-import 'package:adka_app/view/field_staff/breakdown/breakdown.dart';
+import 'package:adka_app/view/field_staff/breakdown/breakdown.dart'
+    show Priority, PriorityX;
+import 'package:adka_app/view/field_staff/maintenence/maintenence.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class AddBreakdownVehiclePage extends StatefulWidget {
-  const AddBreakdownVehiclePage({super.key});
+class AddMaintenanceTaskPage extends StatefulWidget {
+  const AddMaintenanceTaskPage({super.key});
 
   @override
-  State<AddBreakdownVehiclePage> createState() =>
-      _AddBreakdownVehiclePageState();
+  State<AddMaintenanceTaskPage> createState() => _AddMaintenanceTaskPageState();
 }
 
-class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
+class _AddMaintenanceTaskPageState extends State<AddMaintenanceTaskPage> {
   static const Color _primaryColor = Color(0xFF0469B1);
 
   final _formKey = GlobalKey<FormState>();
@@ -24,6 +25,7 @@ class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
 
   String? _selectedAsset;
   Priority _priority = Priority.medium;
+  DateTime _scheduledDate = DateTime.now();
   File? _attachedImage;
   bool _isSubmitting = false;
 
@@ -34,6 +36,26 @@ class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
     _descriptionController.dispose();
     _assetNumberController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _scheduledDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(
+            context,
+          ).colorScheme.copyWith(primary: _primaryColor),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() => _scheduledDate = picked);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -99,19 +121,19 @@ class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
 
     setState(() => _isSubmitting = true);
 
-    final vehicle = BreakdownVehicle(
+    final task = MaintenanceTask(
       assetName: _selectedAsset!,
-      vehicleNumber: _assetNumberController.text.trim(),
-      issue: _descriptionController.text.trim(),
+      assetNumber: _assetNumberController.text.trim(),
+      taskDescription: _descriptionController.text.trim(),
       priority: _priority,
+      scheduledDate: _scheduledDate,
       image: _attachedImage,
-      reportedAt: DateTime.now(),
     );
 
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
-    Navigator.pop(context, vehicle);
+    Navigator.pop(context, task);
   }
 
   Widget _sectionLabel(String text, {bool required = false}) {
@@ -172,7 +194,7 @@ class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Report Breakdown',
+          'Schedule Maintenance',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.white,
@@ -226,14 +248,52 @@ class _AddBreakdownVehiclePageState extends State<AddBreakdownVehiclePage> {
               ],
               const SizedBox(height: 20),
 
+              // Scheduled date
+              _sectionLabel('Scheduled Date', required: true),
+              GestureDetector(
+                onTap: _pickDate,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade400),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_rounded,
+                        size: 18,
+                        color: _primaryColor,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}',
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // Description
-              _sectionLabel('Description', required: true),
+              _sectionLabel('Task Description', required: true),
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 5,
-                decoration: _boxDecoration(hint: 'Describe the issue...'),
+                decoration: _boxDecoration(
+                  hint: 'Describe the maintenance task...',
+                ),
                 validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Describe the issue'
+                    ? 'Describe the task'
                     : null,
               ),
               const SizedBox(height: 20),

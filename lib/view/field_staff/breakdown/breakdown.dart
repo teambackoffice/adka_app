@@ -20,20 +20,62 @@ extension PriorityX on Priority {
   }
 }
 
+// ---------- STATUS ----------
+enum BreakdownStatus { open, inProgress, resolved }
+
+extension BreakdownStatusX on BreakdownStatus {
+  String get label {
+    switch (this) {
+      case BreakdownStatus.open:
+        return 'Open';
+      case BreakdownStatus.inProgress:
+        return 'In Progress';
+      case BreakdownStatus.resolved:
+        return 'Resolved';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case BreakdownStatus.open:
+        return const Color(0xFFE53935);
+      case BreakdownStatus.inProgress:
+        return const Color(0xFFF59E0B);
+      case BreakdownStatus.resolved:
+        return const Color(0xFF2E9E5B);
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case BreakdownStatus.open:
+        return Icons.error_outline_rounded;
+      case BreakdownStatus.inProgress:
+        return Icons.build_rounded;
+      case BreakdownStatus.resolved:
+        return Icons.check_circle_outline_rounded;
+    }
+  }
+}
+
 // ---------- MODEL ----------
 class BreakdownVehicle {
+  final String assetName;
   final String vehicleNumber; // selected asset (vehicle/machine)
   final String issue; // description
   final Priority priority;
   final File? image; // optional attached photo
   final DateTime reportedAt;
+  BreakdownStatus status;
 
   BreakdownVehicle({
+    required this.assetName,
     required this.vehicleNumber,
     required this.issue,
     required this.reportedAt,
     this.priority = Priority.medium,
     this.image,
+    this.status = BreakdownStatus.open,
   });
 }
 
@@ -83,6 +125,12 @@ class _FieldStaffBreakdownPageState extends State<FieldStaffBreakdownPage> {
         ),
       ),
     );
+  }
+
+  void _updateStatus(int index, BreakdownStatus status) {
+    setState(() {
+      _breakdownVehicles[index].status = status;
+    });
   }
 
   String _timeLabel(DateTime dt) {
@@ -154,6 +202,7 @@ class _FieldStaffBreakdownPageState extends State<FieldStaffBreakdownPage> {
                       timeLabel: _timeLabel(vehicle.reportedAt),
                       accent: _accent,
                       onDismissed: () => _removeVehicle(index),
+                      onStatusChanged: (status) => _updateStatus(index, status),
                     );
                   },
                 ),
@@ -224,17 +273,20 @@ class _BreakdownCard extends StatelessWidget {
   final String timeLabel;
   final Color accent;
   final VoidCallback onDismissed;
+  final ValueChanged<BreakdownStatus> onStatusChanged;
 
   const _BreakdownCard({
     required this.vehicle,
     required this.timeLabel,
     required this.accent,
     required this.onDismissed,
+    required this.onStatusChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final priorityColor = vehicle.priority.color;
+    final statusColor = vehicle.status.color;
 
     return Dismissible(
       key: ValueKey('${vehicle.vehicleNumber}-${vehicle.reportedAt}'),
@@ -299,44 +351,112 @@ class _BreakdownCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: priorityColor.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            '${vehicle.priority.label} priority',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: priorityColor,
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: priorityColor.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${vehicle.priority.label} priority',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: priorityColor,
+                                ),
+                              ),
                             ),
-                          ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    vehicle.status.icon,
+                                    size: 11,
+                                    color: statusColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    vehicle.status.label,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      timeLabel,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black54,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          timeLabel,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black54,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 6),
+                      // PopupMenuButton<BreakdownStatus>(
+                      //   tooltip: 'Update status',
+                      //   onSelected: onStatusChanged,
+                      //   padding: EdgeInsets.zero,
+                      //   shape: RoundedRectangleBorder(
+                      //     borderRadius: BorderRadius.circular(10),
+                      //   ),
+                      //   itemBuilder: (context) => BreakdownStatus.values
+                      //       .map(
+                      //         (s) => PopupMenuItem(
+                      //           value: s,
+                      //           child: Row(
+                      //             children: [
+                      //               Icon(s.icon, size: 16, color: s.color),
+                      //               const SizedBox(width: 8),
+                      //               Text(s.label),
+                      //             ],
+                      //           ),
+                      //         ),
+                      //       )
+                      //       .toList(),
+                      //   child: const Icon(
+                      //     Icons.more_vert_rounded,
+                      //     size: 18,
+                      //     color: Colors.black45,
+                      //   ),
+                      // ),
+                    ],
                   ),
                 ],
               ),
